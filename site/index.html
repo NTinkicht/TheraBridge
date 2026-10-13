@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>CareBridge V1 Flow Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: header + tabs; journey view is list | graph | detail, stacking to one column on phones. */
+:root {
+  --bg: #F6F7F9; --surface: #FFFFFF; --raised: #EEF1F5; --line: #DCE1E8; --ink: #14213D; --muted: #4B566B; --faint: #6B7489;
+  --accent: #0F5692; --accent-soft: #E8F0F8; --teal: #0A7385; --teal-soft: #E3F3F5; --identity: #4B2E82; --identity-soft: #F2EDFA;
+  --ok: #1B7A4B; --ok-soft: #E8F5EE; --warn: #8A5300; --warn-soft: #FFF4E0; --bad: #B42318; --bad-soft: #FDECEA; --lock: #5B6475; --nav: #B7C0CC;
+  --font: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0D1226; --surface: #151B33; --raised: #1C2342; --line: #2A3256; --ink: #E9ECF5; --muted: #AAB3CB; --faint: #8B95B0;
+  --accent: #7DB3E8; --accent-soft: #172A45; --teal: #5CCFDB; --teal-soft: #13394A; --identity: #B69BEB; --identity-soft: #2A2350;
+  --ok: #6FD39C; --ok-soft: #173A2B; --warn: #F0C36B; --warn-soft: #2B2617; --bad: #FF9C8F; --bad-soft: #3A1F24; --lock: #A9B4C6; --nav: #3A4466; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0D1226; --surface: #151B33; --raised: #1C2342; --line: #2A3256; --ink: #E9ECF5; --muted: #AAB3CB; --faint: #8B95B0;
+  --accent: #7DB3E8; --accent-soft: #172A45; --teal: #5CCFDB; --teal-soft: #13394A; --identity: #B69BEB; --identity-soft: #2A2350;
+  --ok: #6FD39C; --ok-soft: #173A2B; --warn: #F0C36B; --warn-soft: #2B2617; --bad: #FF9C8F; --bad-soft: #3A1F24; --lock: #A9B4C6; --nav: #3A4466; color-scheme: dark }
+* { box-sizing: border-box }
+html, body { height: 100% }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--font); margin: 0; padding-inline: 16px; padding-block: 0 }
+[hidden] { display: none !important }
+button, input, select { font: inherit; color: inherit }
+button { cursor: pointer }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+.app { max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; padding-block: 18px 32px; min-height: 100% }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px }
+.brand { display: flex; flex-direction: column; gap: 2px; min-width: 0 }
+.eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--teal) }
+h1 { margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -.01em; text-wrap: balance }
+.snapinfo { font-size: 13px; color: var(--muted) }
+.spacer { flex: 1 }
+.btn { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-weight: 500 }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface) }
+.btn[disabled] { opacity: .55; cursor: not-allowed }
+.btn.small { height: 32px; padding: 0 10px; font-size: 13px }
+.notice { padding: 10px 14px; border-radius: 8px; background: var(--raised); color: var(--muted); font-size: 13px }
+.notice.bad { background: var(--bad-soft); color: var(--bad) }
+.notice.ok { background: var(--ok-soft); color: var(--ok) }
+nav.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto }
+nav.tabs button { border: 0; background: none; padding: 10px 14px; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; white-space: nowrap }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--identity) }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 2px }
+.stat b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums }
+.stat span { font-size: 12.5px; color: var(--muted) }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; align-items: start }
+.lane { display: flex; flex-direction: column; gap: 10px; min-width: 0 }
+.lane h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.jcard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px }
+.jcard:hover { border-color: var(--accent) }
+.jcard .t { font-weight: 600; font-size: 15px }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center }
+.chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 12px; font-weight: 500; background: var(--raised); color: var(--muted); white-space: nowrap }
+.chip.pass { background: var(--ok-soft); color: var(--ok) }
+.chip.partial { background: var(--warn-soft); color: var(--warn) }
+.chip.unsafe { background: var(--bad-soft); color: var(--bad) }
+.chip.untestable { background: var(--accent-soft); color: var(--accent) }
+.chip.h { font-family: var(--mono); font-size: 11.5px }
+.meter { display: flex; gap: 12px; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; flex-wrap: wrap }
+.meter b { color: var(--ink); font-weight: 600 }
+.jview { display: grid; grid-template-columns: 240px minmax(0, 1fr) 340px; gap: 14px; align-items: start }
+@media (max-width: 1180px) { .jview { grid-template-columns: minmax(0, 1fr) 320px } .jview .jlist { grid-column: 1 / -1; flex-direction: row; overflow-x: auto; padding-bottom: 4px } .jview .jlist button { min-width: 200px; flex: none } }
+@media (max-width: 760px) { .jview { grid-template-columns: minmax(0, 1fr) } }
+.jlist { display: flex; flex-direction: column; gap: 6px; min-width: 0 }
+.jlist button { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px }
+.jlist button[aria-pressed="true"] { border-color: var(--identity); background: var(--identity-soft) }
+.jlist .role { font-size: 11.5px; color: var(--faint); text-transform: uppercase; letter-spacing: .05em }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; min-width: 0 }
+.graphwrap { display: flex; flex-direction: column; min-width: 0 }
+.gtools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line) }
+.gtools label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted) }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); padding: 8px 12px; border-top: 1px solid var(--line) }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.legend svg { flex: none }
+.canvas { overflow: auto; height: min(68vh, 640px); min-height: 320px; position: relative }
+svg.g { display: block }
+.node rect { fill: var(--surface); stroke: var(--line); stroke-width: 1.2 }
+.node.ext rect { fill: var(--raised); stroke-dasharray: 4 3 }
+.node.orphan rect { stroke: var(--bad); stroke-dasharray: 3 3 }
+.node.issue rect { stroke: var(--warn) }
+.node.sel rect { stroke: var(--identity); stroke-width: 2.4 }
+.node.cur rect { fill: var(--identity-soft); stroke: var(--identity); stroke-width: 2.4 }
+.node.visited rect { fill: var(--teal-soft) }
+.node.start rect { stroke: var(--teal); stroke-width: 2 }
+.node text { fill: var(--ink); font-family: var(--font) }
+.node .code { font-family: var(--mono); font-size: 11px; fill: var(--muted) }
+.node .ttl { font-size: 12.5px; font-weight: 500 }
+.node { cursor: pointer }
+.e { fill: none; stroke-width: 1.6 }
+.e.wired { stroke: var(--accent) }
+.e.nav { stroke: var(--nav); stroke-width: 1 }
+.e.protected { stroke: var(--lock); stroke-dasharray: 6 4 }
+.e.server { stroke: var(--teal); stroke-dasharray: 2 3; stroke-width: 2 }
+.e.missing { stroke: var(--bad); stroke-dasharray: 7 4 }
+.e.example { stroke: var(--warn); stroke-width: 2 }
+.detail { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; max-height: 80vh; overflow: auto }
+.detail h3 { margin: 0; font-size: 16px; font-weight: 600; text-wrap: balance }
+.detail h4 { margin: 4px 0 0; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted) }
+.kv { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 4px 10px; font-size: 13px }
+.kv dt { color: var(--muted) } .kv dd { margin: 0; overflow-wrap: anywhere }
+.opts { display: flex; flex-direction: column; gap: 6px }
+.opt { display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; align-items: start; text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 8px 10px; font-size: 13px }
+.opt:hover { border-color: var(--accent) }
+.opt small { display: block; color: var(--muted); font-size: 12px }
+.opt.k-missing { border-color: var(--bad); background: var(--bad-soft) }
+.opt.k-protected { background: var(--raised) }
+.opt.k-server { border-style: dashed; border-color: var(--teal) }
+.opt.k-example { border-color: var(--warn); background: var(--warn-soft) }
+.dot { width: 10px; height: 10px; border-radius: 5px; margin-top: 4px }
+.issue { padding: 8px 10px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); font-size: 13px }
+.issue.p0 { background: var(--bad-soft); color: var(--bad) }
+.trail { display: flex; flex-wrap: wrap; gap: 4px; font-family: var(--mono); font-size: 11.5px; color: var(--muted) }
+.trail span::after { content: "→"; margin-left: 4px } .trail span:last-child::after { content: "" }
+a { color: var(--accent) }
+.tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px }
+table { border-collapse: collapse; width: 100%; font-size: 13px }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top }
+th { font-weight: 500; color: var(--muted); position: sticky; top: 0; background: var(--surface) }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums }
+td code { font-family: var(--mono); font-size: 12px }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.filters input[type="search"], .filters select { height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; background: var(--surface) }
+.filters input[type="search"] { width: min(320px, 100%) }
+.diffgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; align-items: start }
+.diffgrid ul { margin: 0; padding: 12px 16px 12px 30px; display: flex; flex-direction: column; gap: 4px; font-size: 13px }
+.diffgrid h3 { margin: 0; padding: 12px 16px 0; font-size: 14px }
+.empty { padding: 28px; text-align: center; color: var(--muted) }
+.progress { height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden }
+.progress div { height: 6px; background: var(--teal); width: 0 }
+@media (prefers-reduced-motion: no-preference) { .progress div { transition: width .3s } }
+</style>
+</head>
+<body>
+
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="brand">
+      <span class="eyebrow">CareBridge V1 · design workflows</span>
+      <h1>Flow Map</h1>
+      <span class="snapinfo" id="snapinfo">Loading the latest extraction…</span>
+    </div>
+    <span class="spacer"></span>
+    <a class="btn primary" id="refreshBtn" hidden target="_blank" rel="noopener" style="text-decoration:none">Refresh from Figma ↗</a>
+  </header>
+  <div id="refreshStatus" hidden></div>
+  <nav class="tabs" role="tablist" aria-label="Views">
+    <button role="tab" id="tab-overview" aria-selected="true" data-tab="overview" type="button">Overview</button>
+    <button role="tab" id="tab-journeys" aria-selected="false" data-tab="journeys" type="button">Journeys</button>
+    <button role="tab" id="tab-screens" aria-selected="false" data-tab="screens" type="button">All screens</button>
+    <button role="tab" id="tab-changes" aria-selected="false" data-tab="changes" type="button">Changes</button>
+  </nav>
+  <section id="view-overview" role="tabpanel" aria-labelledby="tab-overview"></section>
+  <section id="view-journeys" role="tabpanel" aria-labelledby="tab-journeys" hidden></section>
+  <section id="view-screens" role="tabpanel" aria-labelledby="tab-screens" hidden></section>
+  <section id="view-changes" role="tabpanel" aria-labelledby="tab-changes" hidden></section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dagre/0.8.5/dagre.min.js"></script>
+<script>
+(function () {
+"use strict";
+var FILE_KEY = "34FdCEFoEc7lZ2sVHmCkge";
+var PAGES = ["271:2", "302:2", "305:2", "329:2", "340:2", "342:2", "344:2", "356:2", "360:2", "361:2", "364:2", "368:2", "388:2"];
+var NAV_RE = /^(Today|Plan|Progress|Messages|Inbox|Caseload|Sessions|Goals|Calendar|Overview|People & roles|Care teams|Families|Consent|Audit)$/;
+
+var DECISIONS = {
+  D1: "Electronic signature and step-up", D2: "Audio retention and deletion", D3: "Keeping flagged AI statements",
+  D4: "Multiple guardians and households", D5: "Message read receipts", D6: "Notice after amendment or withdrawal",
+  D7: "Consent wording", D8: "ABA measurement", D9: "Group-session permissions", D10: "Supervision and co-signing", D11: "Organization AI switch"
+};
+
+/* Curated model. Kinds: protected = a protected action that must stay unlinked in Figma; server = an outcome only the server decides;
+   missing = a transition the design needs but does not have. */
+function T(from, to, kind, label, guard, d) { if (Array.isArray(guard)) { d = guard; guard = ""; } return { from: from, to: to, kind: kind, label: label, guard: guard || "", d: d || [] }; }
+var JOURNEYS = [
+  { id: "review", role: "Therapist", title: "Report review and signing", h: ["H01", "H02", "H03"], result: "partial", start: "302:5",
+    members: ["302:5","302:318","302:361","302:70","302:402","302:445","302:134","302:486","302:529","302:197","302:570","302:613","302:259","310:126","310:183","310:241","310:301","310:358","310:416","310:476","310:534","310:591","310:651","310:709","310:766","304:133","410:5575","410:5614","410:5653","410:5692","304:192","423:643","423:724","423:795"],
+    extra: [T("302:5","423:724","missing","Inline AI flag on the sentence","",["D3"]), T("302:134","423:643","missing","See what changed (AI text vs your edit)"), T("423:724","423:795","protected","Reject flag with your own rationale","Rationale entered",["D3"]),
+      T("410:5575","410:5614","protected","Prepare authentication","Attestation text approved",["D1"]), T("410:5614","410:5653","server","Signature submitted","Step-up passed",["D1"]),
+      T("410:5653","304:192","server","Signature receipt","Authoritative server receipt",["D1"]), T("410:5653","410:5692","server","Signature rejected")],
+    note: "The sentence-review loop is fully wired. Signing reaches SG01, but step-up, pending and the flag and diff screens can only be reached through server or missing links." },
+  { id: "release", role: "Therapist", title: "Report release and withdrawal", h: ["H06", "H11"], result: "partial", start: "304:192",
+    members: ["304:192","405:616","405:655","405:694","405:731","405:768","405:807","407:784"],
+    extra: [T("405:616","405:655","protected","Authorize release","Signed version and one named guardian eligible now",["D4"]), T("405:655","405:731","server","Release receipt"),
+      T("405:655","405:694","server","Release rejected","Eligibility changed"), T("405:731","405:768","missing","Prepare withdrawal"),
+      T("405:768","405:807","protected","Withdraw report","Authorized withdrawal",["D6"]), T("405:807","407:784","server","Old link now shows unavailable","Server and cache revocation",["D6"])],
+    note: "Signing never publishes: the only way in is 'Review family release' from the signed example." },
+  { id: "amend", role: "Therapist", title: "Amendments and edit conflicts", h: ["H05", "H07"], result: "partial", start: "304:192",
+    members: ["304:192","313:264","423:866","423:942","329:68","329:89","427:289","427:315","329:131","330:191","427:339"],
+    extra: [T("313:264","423:866","missing","Compare v2 and the amendment"), T("423:866","423:942","protected","Re-sign v3","New signature, reason recorded",["D1","D6"]),
+      T("329:89","427:289","missing","Reconcile into a new version"), T("427:289","427:315","server","Save v4 receipt"), T("330:191","427:339","missing","Return after sign-in with draft restored")] },
+  { id: "exceptions", role: "Therapist", title: "Review exceptions", h: ["H05"], result: "partial", start: "329:5",
+    members: ["329:5","329:26","329:47","329:110","330:172","329:154"],
+    extra: [T("329:47","302:5","missing","Return to sentence review"), T("329:154","302:259","missing","Return to review after denied signature"), T("330:172","302:70","server","Save receipt arrives")] },
+  { id: "voice", role: "Therapist", title: "Voice summary review", h: ["H04"], result: "partial", start: "305:5",
+    members: ["305:5","305:175","305:209","305:39","305:241","305:275","305:73","305:307","305:341","305:107","305:373","305:407","305:141","427:365"],
+    extra: [T("305:141","427:365","missing","Finish signature on desktop")] },
+  { id: "capture", role: "Therapist", title: "Offline voice capture", h: ["H16"], result: "partial", start: "391:111",
+    members: ["391:111","391:137","407:55","407:86","407:117","407:148","407:179","407:365","407:393","407:424","391:163","391:189","391:215","391:244","391:273","391:299","407:455","407:486"],
+    extra: [T("391:137","407:55","missing","Prepare to record"), T("407:55","407:86","protected","Record voice","Consent current, child and encounter verified, device key ready",["D7"]),
+      T("407:55","407:393","server","Storage unavailable"), T("407:86","407:117","protected","Pause"), T("407:117","407:86","protected","Resume"), T("407:86","407:148","protected","Stop"),
+      T("407:86","407:424","server","Interrupted (call, app closed)"), T("407:148","407:179","protected","Discard recording"), T("407:148","407:365","server","Saved encrypted on this phone"),
+      T("407:365","391:163","missing","Add to the protected queue"), T("391:215","391:273","server","Upload receipt"), T("391:215","391:244","server","Upload failed"),
+      T("391:299","407:455","protected","Accept transcript","Transcript validated",["D2"]), T("407:455","407:486","server","Audio deletion receipt","",["D2"])],
+    note: "Only encrypted voice notes may be stored offline. No counters or scores." },
+  { id: "plan", role: "Therapist", title: "Home plan: build, approve, release", h: ["H08", "H09", "H10", "H11"], result: "partial", start: "344:5",
+    members: ["344:5","344:51","382:48","344:97","344:139","423:1042","408:5469","410:344","344:185","344:231","425:359","344:274","379:28","379:71","379:115","379:159","379:202","344:322","407:732"],
+    extra: [T("344:139","423:1042","missing","Open in the family shell"), T("344:139","408:5469","server","Content changed since preview"), T("410:344","344:185","protected","Approve plan","Attestation recorded and version locked on the server"),
+      T("344:231","344:274","protected","Continue to release preview","One eligible guardian, checked by the server",["D4"]), T("344:231","425:359","missing","More than one guardian",["D4"]),
+      T("344:274","379:28","protected","Release to family"), T("379:28","379:115","server","Release receipt"), T("379:28","379:71","server","Eligibility changed"),
+      T("379:159","379:202","protected","Withdraw plan","",["D6"]), T("379:202","407:732","server","Old link now shows unavailable")] },
+  { id: "triage", role: "Therapist", title: "Family evidence triage", h: ["H13"], result: "partial", start: "342:5",
+    members: ["342:5","342:48","342:91","342:132","342:175","342:220","342:263","342:306"],
+    extra: [T("342:132","342:220","missing","Acknowledge evidence"), T("342:175","342:132","server","Question sent")] },
+  { id: "mobile", role: "Therapist", title: "Therapist day on the phone", h: ["H17", "H18"], result: "partial", start: "388:3",
+    members: ["388:3","391:3","391:29","391:55","391:81","391:111","391:328","391:354","410:5744","391:383","424:141"],
+    extra: [T("391:81","391:111","protected","Start session","Authorized encounter and attendance recorded"), T("391:3","424:141","missing","Open group session","",["D9"]), T("391:3","391:354","server","Child access revoked")] },
+  { id: "desk", role: "Therapist", title: "Caseload and sessions (desktop)", h: [], result: "partial", start: "364:5",
+    members: ["364:5","364:44","364:83","364:122","364:161","364:202","364:241","364:282","364:321","364:360"],
+    extra: [T("364:161","364:202","protected","Start session","Authorized encounter"), T("364:241","364:282","protected","Complete documentation"), T("364:241","364:321","server","Another device saved first"), T("364:44","364:360","server","Access revoked")] },
+  { id: "practice", role: "Parent", title: "Weekly practice and outcome", h: ["H12"], result: "partial", start: "271:3",
+    members: ["271:3","271:46","271:88","271:121","273:15","273:114","271:191","271:154","273:49","273:148","454:26","454:54","454:82","271:214"],
+    extra: [T("454:26","271:214","server","Delivery receipt","Authenticated server receipt")],
+    note: "Since the 13 Oct review, Send now routes to a sending state (454:26) instead of jumping to 'received'." },
+  { id: "progress", role: "Parent", title: "Progress and reports", h: [], result: "partial", start: "271:240",
+    members: ["271:240","271:280","271:309","271:338","271:367","271:396","271:429","271:458","271:485","271:521","271:549","271:575","271:606","271:632","271:652","271:674","271:695","407:784"],
+    extra: [T("271:240","271:652","server","Offline and not cached"), T("271:240","271:674","server","Could not load"), T("271:240","271:695","server","Access ended"),
+      T("271:521","407:784","server","Report withdrawn","",["D6"]), T("271:606","360:79","missing","Send the question")] },
+  { id: "consent", role: "Parent", title: "Privacy, consent and media", h: ["H13"], result: "partial", start: "356:5",
+    members: ["356:5","356:29","356:53","356:79","356:105","356:129","356:153","356:179","410:5804","410:5831","410:5858"],
+    extra: [T("356:53","410:5831","server","Upload failed after consent","",["D7"]), T("356:79","410:5858","protected","Withdraw permission","",["D7"]), T("410:5858","356:105","server","Withdrawal recorded")] },
+  { id: "messages", role: "Parent", title: "Messages and appointments", h: ["H14", "H15"], result: "partial", start: "360:5",
+    members: ["360:5","360:29","360:53","360:79","360:105","360:129","360:153","360:177","360:203","384:735","384:761","384:788","360:227","360:260","360:293","360:328","360:363","384:341","384:377","384:413","384:449","384:485"],
+    extra: [T("360:53","360:79","missing","Send","Recipient verified",["D5"]), T("360:79","360:105","server","Delivery failed"), T("360:177","384:735","missing","Submit change request"),
+      T("384:735","360:328","server","Request reaches the scheduling inbox"), T("360:328","384:449","protected","Decline request"), T("360:328","384:485","protected","Reschedule"),
+      T("384:449","384:788","server","Parent sees decline"), T("384:485","384:761","server","Parent sees new time"), T("360:293","384:341","protected","Send message"),
+      T("384:341","384:377","server","Delivery receipt"), T("384:341","360:29","server","Message appears in the family thread")] },
+  { id: "install", role: "Parent", title: "Install, history and offline", h: [], result: "partial", start: "271:3",
+    members: ["271:3","413:154","413:26","413:90","271:652"],
+    extra: [T("271:3","413:154","missing","Install prompt"), T("271:3","413:26","missing","Practice history")] },
+  { id: "iam", role: "Administrator", title: "Access lifecycle", h: ["H10", "H17"], result: "partial", start: "361:5",
+    members: ["361:5","361:48","361:91","361:136","361:181","361:224","361:269","361:312","361:357","361:402","361:445","361:490","375:51","375:94","375:138","375:181","375:224","375:267","375:310","375:353","412:95","412:138","427:497","427:541","427:585"],
+    extra: [T("361:312","361:357","missing","Revoke access"), T("361:357","361:402","protected","Revoke"), T("361:402","375:353","server","Propagation pending"),
+      T("361:445","412:95","missing","Open audit event"), T("361:5","427:497","missing","Centre operations"), T("361:5","412:138","missing","Therapy types and centre"),
+      T("427:497","427:541","missing","Prepare export"), T("427:541","427:585","server","Export denied")],
+    note: "Administrators never see clinical narratives." },
+  { id: "revoked", role: "Shared", title: "Revoked and expired entry", h: ["H11", "H18"], result: "untestable", start: "391:354",
+    members: ["391:354","410:5744","375:224","360:203","407:732","407:784","271:695","329:131","330:191","427:339","364:360"], extra: [],
+    note: "Link, history and cache invalidation can only be proven in a running app." }
+];
+
+var ISSUES = {
+  "344:231": [["p0", "S-02: 'Guardian eligible now' and 'Approved plan version' are tickable checkboxes. These are server facts."], ["p1", "Choosing one guardian uses checkboxes, not a radio group."]],
+  "410:344": [["p0", "S-02: 'Version hash has not changed' is a user checkbox."], ["p1", "'Inspect approved example' is a product-styled link into the approved state."]],
+  "382:48": [["p0", "S-03: the plan editor is not bound to the plan content source; its fallback text differs from the preview."]],
+  "360:79": [["p1", "Says 'Message not sent' and 'Waiting for a server receipt' at once."]],
+  "405:616": [["p1", "Hard-coded colours and fonts (T-01). No recipient picker (G-01). Prototype commentary in the UI (V-01)."]],
+  "410:5575": [["p1", "Attestation shown as 'D1 pending' commentary (V-01)."]],
+  "407:86": [["p1", "Explanatory card instead of a recording screen: no prominent timer or one-hand controls (V-02)."]],
+  "423:866": [["p1", "Comparison lists categories, not the changed sentences (A-01)."]],
+  "423:1042": [["p1", "Prototype commentary inside the family shell; plan preview shows 'Today' as the active tab."]],
+  "427:497": [["p1", "Navigation highlights 'People & roles'; placeholder metrics."]],
+  "412:95": [["p1", "Navigation highlights 'People & roles'."]],
+  "407:732": [["p1", "Emoji used as an icon; parent copy uses system language."]],
+  "271:214": [["p1", "Receipt screen: must only appear after an authenticated server receipt."]]
+};
+
+/* ---------- state ---------- */
+var S = { snaps: [], data: null, prev: null, tab: "overview", journey: "review", sel: null, walk: null, showNav: false, zoom: null, effZoom: 1, canEdit: false, mcp: null, db: null };
+function el(tag, attrs, kids) { var n = document.createElement(tag); if (attrs) for (var k in attrs) { if (k === "text") n.textContent = attrs[k]; else if (k === "html") n.innerHTML = attrs[k]; else if (k.slice(0, 2) === "on") n.addEventListener(k.slice(2), attrs[k]); else if (attrs[k] !== null && attrs[k] !== undefined && attrs[k] !== false) n.setAttribute(k, attrs[k] === true ? "" : attrs[k]); } (kids || []).forEach(function (c) { if (c != null) n.appendChild(typeof c === "string" ? document.createTextNode(c) : c); }); return n; }
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+function figmaUrl(id) { return "https://www.figma.com/design/" + FILE_KEY + "/?node-id=" + id.replace(":", "-"); }
+function code(f) { if (!f) return ""; var parts = f.name.split("/").map(function (s) { return s.trim(); }); var c = parts.filter(function (p) { return /^[A-Z]{1,6}-?[A-Z0-9]*\d+[A-Z]?$/.test(p) || /^(CHECK|SENDING|FAILED|OFFLINE|RECEIVED|DUPLICATE|DRAFT|SEND-[A-Z]+|P-[A-Z]+-\d+)$/.test(p); })[0]; return c || parts[1] || parts[0]; }
+function fmtDate(iso) { try { var d = new Date(iso); return d.toLocaleString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }); } catch (e) { return iso; } }
+
+/* ---------- model ---------- */
+function buildModel(pagesArr) {
+  var frames = {}, edges = [], incoming = {}, pagesById = {};
+  pagesArr.forEach(function (p) {
+    pagesById[p.page] = p.name;
+    (p.frames || []).forEach(function (f) { frames[f[0]] = { id: f[0], name: f[1], w: f[2], mode: f[3], title: f[4], locks: f[5], page: p.page }; });
+  });
+  pagesArr.forEach(function (p) {
+    (p.edges || []).forEach(function (e) {
+      var nav = NAV_RE.test(e[2]);
+      edges.push({ from: e[0], to: e[1], label: e[2], nav: nav });
+      if (e[0] !== e[1]) { (incoming[e[1]] = incoming[e[1]] || []).push(e[0]); }
+    });
+  });
+  var out = {}; edges.forEach(function (e) { (out[e.from] = out[e.from] || []).push(e); });
+  var orphans = Object.keys(frames).filter(function (id) { return !incoming[id]; });
+  return { frames: frames, edges: edges, out: out, incoming: incoming, orphans: orphans, pages: pagesById };
+}
+function journeyEdges(j, m) {
+  var set = {}; j.members.forEach(function (id) { set[id] = 1; });
+  var list = [];
+  m.edges.forEach(function (e) {
+    if (set[e.from] && set[e.to] && e.from !== e.to) {
+      var kind = e.nav ? "nav" : (/approved example|example$/i.test(e.label) && /344:185/.test(e.to) ? "example" : "wired");
+      list.push({ from: e.from, to: e.to, kind: kind, label: e.label, guard: "", d: [] });
+    }
+  });
+  j.extra.forEach(function (x) {
+    var wired = list.some(function (e) { return e.from === x.from && e.to === x.to && e.kind !== "nav"; });
+    if (x.kind === "missing" && wired) return; // designer has since added it
+    list.push(x);
+  });
+  return list;
+}
+function journeyStats(j, m) {
+  var es = journeyEdges(j, m), members = j.members.filter(function (id) { return m.frames[id]; });
+  var count = function (k) { return es.filter(function (e) { return e.kind === k; }).length; };
+  var reach = {}; var inJ = {}; es.forEach(function (e) { if (e.kind === "wired" || e.kind === "nav" || e.kind === "example") inJ[e.to] = 1; });
+  var unreachable = members.filter(function (id) { return id !== j.start && !inJ[id]; }).length;
+  var missingFrames = j.members.filter(function (id) { return !m.frames[id]; }).length;
+  return { screens: members.length, wired: count("wired"), nav: count("nav"), protected: count("protected"), server: count("server"), missing: count("missing"), unreachable: unreachable, gone: missingFrames };
+}
+
+/* ---------- rendering: overview ---------- */
+function renderOverview() {
+  var v = document.getElementById("view-overview"); v.innerHTML = "";
+  var m = S.data;
+  if (!m) { v.appendChild(el("div", { class: "panel empty", text: "No extraction yet. An editor can press 'Refresh from Figma' to read the current file." })); return; }
+  var nonNav = m.edges.filter(function (e) { return !e.nav; }).length;
+  v.appendChild(el("div", { class: "stats" }, [
+    stat(Object.keys(m.frames).length, "screens on " + Object.keys(m.pages).length + " canonical pages"),
+    stat(nonNav, "action links (" + (m.edges.length - nonNav) + " navigation)"),
+    stat(m.orphans.length, "screens nothing links to (entry screens included)"),
+    stat(JOURNEYS.length, "journeys mapped to H01–H18")
+  ]));
+  var lanes = el("div", { class: "lanes", style: "margin-top:14px" });
+  ["Therapist", "Parent", "Administrator", "Shared"].forEach(function (role) {
+    var lane = el("div", { class: "lane" }, [el("h2", { text: role })]);
+    JOURNEYS.filter(function (j) { return j.role === role; }).forEach(function (j) {
+      var st = journeyStats(j, m);
+      var card = el("button", { class: "jcard", type: "button", onclick: function () { S.journey = j.id; S.sel = null; S.walk = null; S.zoom = null; setTab("journeys"); } }, [
+        el("span", { class: "t", text: j.title }),
+        el("div", { class: "row" }, [resultChip(j.result)].concat(j.h.map(function (h) { return el("span", { class: "chip h", text: h }); }))),
+        el("div", { class: "meter" }, [
+          meter(st.screens, "screens"), meter(st.wired, "wired"), meter(st.unreachable, "unreachable"), meter(st.missing, "missing"), meter(st.protected + st.server, "protected or server")
+        ])
+      ]);
+      lane.appendChild(card);
+    });
+    lanes.appendChild(lane);
+  });
+  v.appendChild(lanes);
+}
+function stat(n, label) { return el("div", { class: "stat" }, [el("b", { text: String(n) }), el("span", { text: label })]); }
+function meter(n, label) { var s = el("span"); s.appendChild(el("b", { text: String(n) })); s.appendChild(document.createTextNode(" " + label)); return s; }
+function resultChip(r) { var t = { pass: "Passes static design", partial: "Partial", unsafe: "Unsafe", untestable: "Needs the running app" }[r] || r; return el("span", { class: "chip " + r, text: t }); }
+
+/* ---------- rendering: journeys ---------- */
+function renderJourneys() {
+  var v = document.getElementById("view-journeys"); v.innerHTML = "";
+  var m = S.data; if (!m) { v.appendChild(el("div", { class: "panel empty", text: "No extraction yet." })); return; }
+  var j = JOURNEYS.filter(function (x) { return x.id === S.journey; })[0] || JOURNEYS[0];
+  var wrap = el("div", { class: "jview" });
+  var list = el("div", { class: "jlist", role: "list" });
+  JOURNEYS.forEach(function (x) {
+    list.appendChild(el("button", { type: "button", "aria-pressed": x.id === j.id ? "true" : "false", onclick: function () { S.journey = x.id; S.sel = null; S.walk = null; S.zoom = null; renderJourneys(); } }, [
+      el("span", { class: "role", text: x.role }), el("span", { text: x.title })
+    ]));
+  });
+  wrap.appendChild(list);
+  var gw = el("div", { class: "panel graphwrap" });
+  var navBox = el("input", { type: "checkbox", id: "showNav" }); navBox.checked = S.showNav; navBox.addEventListener("change", function () { S.showNav = navBox.checked; renderJourneys(); });
+  gw.appendChild(el("div", { class: "gtools" }, [
+    el("b", { text: j.title }), el("span", { class: "spacer" }),
+    el("label", { for: "showNav" }, [navBox, "Show navigation links"]),
+    el("button", { class: "btn small", type: "button", "aria-label": "Zoom out", onclick: function () { S.zoom = Math.max(.4, S.effZoom - .15); renderJourneys(); } }, ["−"]),
+    el("button", { class: "btn small", type: "button", "aria-label": "Zoom in", onclick: function () { S.zoom = Math.min(1.6, S.effZoom + .15); renderJourneys(); } }, ["+"]),
+    el("button", { class: "btn small", type: "button", onclick: function () { S.zoom = null; renderJourneys(); } }, ["Fit"]),
+    el("button", { class: "btn small primary", type: "button", onclick: function () { S.walk = { cur: j.start, trail: [j.start] }; S.sel = j.start; renderJourneys(); } }, [S.walk ? "Restart walk" : "Walk from start"])
+  ]));
+  var canvas = el("div", { class: "canvas" });
+  canvas.appendChild(drawGraph(j, m));
+  gw.appendChild(canvas);
+  gw.appendChild(legend());
+  wrap.appendChild(gw);
+  wrap.appendChild(detailPanel(j, m));
+  v.appendChild(wrap);
+  fitAndFocus(canvas);
+}
+function fitAndFocus(canvas) {
+  var svgEl = canvas.querySelector("svg.g"); if (!svgEl) return;
+  var W = +svgEl.getAttribute("data-w"), H = +svgEl.getAttribute("data-h");
+  var z = S.zoom != null ? S.zoom : Math.max(.55, Math.min(1, (canvas.clientWidth - 4) / W));
+  S.effZoom = z; svgEl.setAttribute("width", Math.round(W * z)); svgEl.setAttribute("height", Math.round(H * z));
+  canvas.style.height = Math.round(Math.min(Math.max(innerHeight * .68, 320), Math.max(320, H * z + 24))) + "px";
+  var target = canvas.querySelector("g.node.cur, g.node.sel"); if (!target) return;
+  var cr = canvas.getBoundingClientRect(), tr = target.getBoundingClientRect();
+  if (tr.left < cr.left || tr.right > cr.right) canvas.scrollLeft += (tr.left + tr.width / 2) - (cr.left + cr.width / 2);
+  if (tr.top < cr.top || tr.bottom > cr.bottom) canvas.scrollTop += (tr.top + tr.height / 2) - (cr.top + cr.height / 2);
+}
+function legend() {
+  var items = [["wired", "Wired in Figma"], ["protected", "Protected action (locked)"], ["server", "Server decides"], ["missing", "Missing link"], ["example", "Example link into success"], ["nav", "Navigation"]];
+  var lg = el("div", { class: "legend" });
+  items.forEach(function (it) {
+    var s = el("span"); s.innerHTML = '<svg width="28" height="8" aria-hidden="true"><line x1="0" y1="4" x2="28" y2="4" class="e ' + it[0] + '"/></svg>'; s.appendChild(document.createTextNode(it[1])); lg.appendChild(s);
+  });
+  var o = el("span"); o.innerHTML = '<svg width="18" height="12" aria-hidden="true"><rect x="1" y="1" width="16" height="10" rx="3" fill="none" stroke="var(--bad)" stroke-dasharray="3 3"/></svg>'; o.appendChild(document.createTextNode("No way in from anywhere")); lg.appendChild(o);
+  return lg;
+}
+function drawGraph(j, m) {
+  if (!window.dagre) { return el("div", { class: "empty", text: "The diagram library did not load. The lists on the right still work." }); }
+  var es = journeyEdges(j, m).filter(function (e) { return S.showNav || e.kind !== "nav"; });
+  var g = new dagre.graphlib.Graph({ multigraph: true }); g.setGraph({ rankdir: "LR", nodesep: 18, ranksep: 56, marginx: 16, marginy: 16 }); g.setDefaultEdgeLabel(function () { return {}; });
+  var ids = {}; j.members.forEach(function (id) { ids[id] = 1; }); es.forEach(function (e) { ids[e.from] = 1; ids[e.to] = 1; });
+  Object.keys(ids).forEach(function (id) { g.setNode(id, { width: 196, height: 56 }); });
+  es.forEach(function (e, i) { g.setEdge(e.from, e.to, {}, "e" + i); });
+  dagre.layout(g);
+  var gr = g.graph(), W = Math.ceil(gr.width), H = Math.ceil(gr.height), z = S.effZoom;
+  var visited = {}; if (S.walk) S.walk.trail.forEach(function (id) { visited[id] = 1; });
+  var orphanSet = {}; m.orphans.forEach(function (id) { orphanSet[id] = 1; });
+  var svg = '<svg class="g" role="img" aria-label="' + esc(j.title) + ' flow diagram" data-w="' + W + '" data-h="' + H + '" width="' + Math.round(W * z) + '" height="' + Math.round(H * z) + '" viewBox="0 0 ' + W + " " + H + '"><defs>';
+  ["wired", "protected", "server", "missing", "example", "nav"].forEach(function (k) { svg += '<marker id="ar-' + k + '" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ah-' + k + '"/></marker>'; });
+  svg += "</defs><style>.ah-wired{fill:var(--accent)}.ah-protected{fill:var(--lock)}.ah-server{fill:var(--teal)}.ah-missing{fill:var(--bad)}.ah-example{fill:var(--warn)}.ah-nav{fill:var(--nav)}</style>";
+  es.forEach(function (e, i) {
+    var ed = g.edge(e.from, e.to, "e" + i); if (!ed) return;
+    var pts = ed.points, d = "M" + pts[0].x + "," + pts[0].y;
+    for (var k = 1; k < pts.length; k++) d += " L" + pts[k].x + "," + pts[k].y;
+    svg += '<path class="e ' + e.kind + '" d="' + d + '" marker-end="url(#ar-' + e.kind + ')"><title>' + esc(e.label + (e.guard ? " — requires: " + e.guard : "")) + "</title></path>";
+  });
+  Object.keys(ids).forEach(function (id) {
+    var n = g.node(id), f = m.frames[id], x = n.x - n.width / 2, y = n.y - n.height / 2;
+    var cls = ["node"]; if (!ids[id] || j.members.indexOf(id) < 0) cls.push("ext"); if (orphanSet[id]) cls.push("orphan"); if (ISSUES[id]) cls.push("issue");
+    if (id === j.start) cls.push("start"); if (visited[id]) cls.push("visited"); if (S.walk && S.walk.cur === id) cls.push("cur"); else if (S.sel === id) cls.push("sel");
+    var t1 = f ? code(f) + " · " + f.w : id + " · not in file", t2 = f ? f.title : "Screen not found in this extraction";
+    if (t2.length > 30) t2 = t2.slice(0, 29) + "…";
+    svg += '<g class="' + cls.join(" ") + '" data-id="' + id + '" tabindex="0" role="button" aria-label="' + esc((f ? f.title : id)) + '"><rect x="' + x + '" y="' + y + '" width="' + n.width + '" height="' + n.height + '" rx="8"/>' +
+      '<text class="code" x="' + (x + 10) + '" y="' + (y + 20) + '">' + esc(t1) + (ISSUES[id] ? " ⚑" : "") + "</text>" +
+      '<text class="ttl" x="' + (x + 10) + '" y="' + (y + 40) + '">' + esc(t2) + "</text></g>";
+  });
+  svg += "</svg>";
+  var holder = el("div", { html: svg });
+  holder.addEventListener("click", function (ev) { var gEl = ev.target.closest ? ev.target.closest("g.node") : null; if (gEl) selectNode(gEl.getAttribute("data-id")); });
+  holder.addEventListener("keydown", function (ev) { if ((ev.key === "Enter" || ev.key === " ") && ev.target.getAttribute && ev.target.getAttribute("data-id")) { ev.preventDefault(); selectNode(ev.target.getAttribute("data-id")); } });
+  return holder;
+}
+function selectNode(id) { if (S.walk) { S.walk.cur = id; if (S.walk.trail[S.walk.trail.length - 1] !== id) S.walk.trail.push(id); } S.sel = id; renderJourneys(); }
+function detailPanel(j, m) {
+  var p = el("div", { class: "panel detail", "aria-live": "polite" });
+  var id = S.walk ? S.walk.cur : S.sel;
+  if (!id) {
+    var st = journeyStats(j, m);
+    p.appendChild(el("h3", { text: j.title }));
+    p.appendChild(el("div", { class: "row" }, [resultChip(j.result)].concat(j.h.map(function (h) { return el("span", { class: "chip h", text: h }); }))));
+    if (j.note) p.appendChild(el("p", { style: "margin:0", text: j.note }));
+    p.appendChild(el("dl", { class: "kv" }, [
+      el("dt", { text: "Screens" }), el("dd", { text: st.screens + (st.gone ? " (" + st.gone + " no longer in the file)" : "") }),
+      el("dt", { text: "Wired" }), el("dd", { text: st.wired + " action links" }),
+      el("dt", { text: "Unreachable" }), el("dd", { text: st.unreachable + " screens have no wired link from inside this journey" }),
+      el("dt", { text: "Protected" }), el("dd", { text: st.protected + " actions that must stay locked in Figma" }),
+      el("dt", { text: "Server" }), el("dd", { text: st.server + " outcomes only the server can decide" }),
+      el("dt", { text: "Missing" }), el("dd", { text: st.missing + " links the design still needs" })
+    ]));
+    var ds = {}; j.extra.forEach(function (x) { x.d.forEach(function (d) { ds[d] = 1; }); });
+    if (Object.keys(ds).length) { p.appendChild(el("h4", { text: "Waiting on owner decisions" })); p.appendChild(el("div", { class: "row" }, Object.keys(ds).map(function (d) { return el("span", { class: "chip", title: DECISIONS[d], text: d + " · " + DECISIONS[d] }); }))); }
+    p.appendChild(el("p", { style: "margin:0;color:var(--muted)", text: "Select a screen, or walk the journey from its start to try every branch." }));
+    return p;
+  }
+  var f = m.frames[id];
+  if (S.walk) {
+    var tr = el("div", { class: "trail", "aria-label": "Path so far" }); S.walk.trail.forEach(function (t) { var ff = m.frames[t]; tr.appendChild(el("span", { text: ff ? code(ff) : t })); });
+    p.appendChild(el("div", { class: "row" }, [el("b", { text: "Walking" }), el("span", { class: "spacer" }),
+      el("button", { class: "btn small", type: "button", disabled: S.walk.trail.length < 2, onclick: function () { S.walk.trail.pop(); S.walk.cur = S.walk.trail[S.walk.trail.length - 1]; S.sel = S.walk.cur; renderJourneys(); } }, ["Back"]),
+      el("button", { class: "btn small", type: "button", onclick: function () { S.walk = null; renderJourneys(); } }, ["End walk"])]));
+    p.appendChild(tr);
+  }
+  p.appendChild(el("h3", { text: f ? f.title : id }));
+  if (f) {
+    p.appendChild(el("dl", { class: "kv" }, [
+      el("dt", { text: "Frame" }), el("dd", { text: f.name }),
+      el("dt", { text: "Page" }), el("dd", { text: m.pages[f.page] || f.page }),
+      el("dt", { text: "Width" }), el("dd", { text: f.w + " px" + (f.mode === "99:0" || /\bDARK\b/.test(f.name) ? " · dark" : f.mode === "14:2" ? " · parent mode" : "") }),
+      el("dt", { text: "Ways in" }), el("dd", { text: (m.incoming[id] || []).length ? (m.incoming[id] || []).length + " links" : "None from anywhere in the file" })
+    ]));
+    p.appendChild(el("a", { href: figmaUrl(id), target: "_blank", rel: "noopener" }, ["Open in Figma ↗"]));
+  } else p.appendChild(el("div", { class: "notice bad", text: "This screen is not in the latest extraction. It may have been deleted or recreated with a new ID." }));
+  (ISSUES[id] || []).forEach(function (is) { p.appendChild(el("div", { class: "issue " + is[0], text: is[1] })); });
+  var es = journeyEdges(j, m).filter(function (e) { return e.from === id; });
+  var outside = (m.out[id] || []).filter(function (e) { return j.members.indexOf(e.to) < 0 && !e.nav; }).map(function (e) { return { from: e.from, to: e.to, kind: "wired", label: e.label + " (leaves this journey)", guard: "", d: [] }; });
+  var navs = S.showNav ? [] : es.filter(function (e) { return e.kind === "nav"; });
+  var choices = es.filter(function (e) { return S.showNav || e.kind !== "nav"; }).concat(outside);
+  p.appendChild(el("h4", { text: S.walk ? "What can happen next" : "Leaving this screen" }));
+  if (!choices.length) p.appendChild(el("div", { class: "notice", text: navs.length ? "Only navigation links leave this screen." : "Nothing leaves this screen: it is a dead end in the prototype." }));
+  var opts = el("div", { class: "opts" });
+  var order = { wired: 0, example: 1, protected: 2, server: 3, missing: 4, nav: 5 };
+  choices.sort(function (a, b) { return order[a.kind] - order[b.kind]; }).forEach(function (e) {
+    var tf = m.frames[e.to];
+    var kindText = { wired: "Wired in Figma", nav: "Navigation", protected: "Protected action · stays locked in Figma", server: "Server decides", missing: "Missing in the design", example: "Example link into a success state" }[e.kind];
+    var color = { wired: "var(--accent)", nav: "var(--nav)", protected: "var(--lock)", server: "var(--teal)", missing: "var(--bad)", example: "var(--warn)" }[e.kind];
+    var b = el("button", { class: "opt k-" + e.kind, type: "button", onclick: function () { if (S.walk) { S.walk.cur = e.to; S.walk.trail.push(e.to); } S.sel = e.to; renderJourneys(); } }, [
+      el("span", { class: "dot", style: "background:" + color, "aria-hidden": "true" }),
+      el("span", null, [el("b", { text: e.label || "(unlabelled)" }), el("small", { text: kindText + " → " + (tf ? code(tf) + " " + tf.title : e.to) + (e.guard ? " · requires: " + e.guard : "") + (e.d.length ? " · " + e.d.join(", ") : "") })])
+    ]);
+    opts.appendChild(b);
+  });
+  p.appendChild(opts);
+  return p;
+}
+
+/* ---------- rendering: screens ---------- */
+var SF = { q: "", page: "", width: "", orphan: false };
+function renderScreens() {
+  var v = document.getElementById("view-screens"); v.innerHTML = "";
+  var m = S.data; if (!m) { v.appendChild(el("div", { class: "panel empty", text: "No extraction yet." })); return; }
+  var q = el("input", { type: "search", id: "sq", placeholder: "Search name, title or ID", value: SF.q, "aria-label": "Search screens" });
+  var ps = el("select", { id: "sp", "aria-label": "Page" }, [el("option", { value: "", text: "All pages" })].concat(Object.keys(m.pages).map(function (p) { var o = el("option", { value: p, text: m.pages[p] }); if (SF.page === p) o.selected = true; return o; })));
+  var ws = el("select", { id: "sw", "aria-label": "Width" }, [el("option", { value: "", text: "All widths" })].concat([320, 390, 768, 1024, 1440].map(function (w) { var o = el("option", { value: String(w), text: w + " px" }); if (SF.width === String(w)) o.selected = true; return o; })));
+  var oc = el("input", { type: "checkbox", id: "so" }); oc.checked = SF.orphan;
+  var bar = el("div", { class: "filters" }, [q, ps, ws, el("label", { for: "so", style: "display:inline-flex;gap:6px;align-items:center" }, [oc, "Only screens with no way in"])]);
+  var tw = el("div", { class: "tablewrap", style: "margin-top:12px" });
+  function draw() {
+    var rows = Object.keys(m.frames).map(function (id) { return m.frames[id]; }).filter(function (f) {
+      if (SF.page && f.page !== SF.page) return false; if (SF.width && String(f.w) !== SF.width) return false;
+      if (SF.orphan && m.incoming[f.id]) return false;
+      if (SF.q) { var s = (f.id + " " + f.name + " " + f.title).toLowerCase(); if (s.indexOf(SF.q.toLowerCase()) < 0) return false; }
+      return true;
+    });
+    tw.innerHTML = "";
+    var t = el("table"); t.appendChild(el("thead", null, [el("tr", null, [el("th", { text: "Screen" }), el("th", { text: "Title" }), el("th", { class: "num", text: "Width" }), el("th", { class: "num", text: "Ways in" }), el("th", { class: "num", text: "Links out" }), el("th", { text: "Figma" })])]));
+    var tb = el("tbody");
+    rows.forEach(function (f) {
+      var inc = (m.incoming[f.id] || []).length, out = (m.out[f.id] || []).filter(function (e) { return !e.nav; }).length;
+      tb.appendChild(el("tr", null, [el("td", null, [el("code", { text: f.id }), document.createTextNode(" " + code(f))]), el("td", { text: f.title }), el("td", { class: "num", text: f.w }),
+        el("td", { class: "num", style: inc ? "" : "color:var(--bad);font-weight:600", text: String(inc) }), el("td", { class: "num", text: String(out) }), el("td", null, [el("a", { href: figmaUrl(f.id), target: "_blank", rel: "noopener", text: "Open ↗" })])]));
+    });
+    t.appendChild(tb); tw.appendChild(t);
+    tw.insertBefore(el("div", { class: "notice", style: "border-radius:12px 12px 0 0", text: rows.length + " of " + Object.keys(m.frames).length + " screens" }), t);
+  }
+  q.addEventListener("input", function () { SF.q = q.value; draw(); }); ps.addEventListener("change", function () { SF.page = ps.value; draw(); });
+  ws.addEventListener("change", function () { SF.width = ws.value; draw(); }); oc.addEventListener("change", function () { SF.orphan = oc.checked; draw(); });
+  v.appendChild(bar); v.appendChild(tw); draw();
+}
+
+/* ---------- rendering: changes ---------- */
+function renderChanges() {
+  var v = document.getElementById("view-changes"); v.innerHTML = "";
+  if (!S.data) { v.appendChild(el("div", { class: "panel empty", text: "No extraction yet." })); return; }
+  if (!S.prev) { v.appendChild(el("div", { class: "panel empty", text: "This is the first extraction. After the next refresh this view lists screens and links that were added, removed or renamed." })); return; }
+  var a = S.prev, b = S.data;
+  var added = Object.keys(b.frames).filter(function (id) { return !a.frames[id]; }), removed = Object.keys(a.frames).filter(function (id) { return !b.frames[id]; });
+  var renamed = Object.keys(b.frames).filter(function (id) { return a.frames[id] && (a.frames[id].title !== b.frames[id].title || a.frames[id].name !== b.frames[id].name); });
+  var key = function (e) { return e.from + ">" + e.to + ">" + e.label; };
+  var ak = {}, bk = {}; a.edges.forEach(function (e) { ak[key(e)] = e; }); b.edges.forEach(function (e) { bk[key(e)] = e; });
+  var eAdd = Object.keys(bk).filter(function (k) { return !ak[k] && !bk[k].nav; }), eRem = Object.keys(ak).filter(function (k) { return !bk[k] && !ak[k].nav; });
+  var fixedOrphans = a.orphans.filter(function (id) { return b.frames[id] && b.incoming[id]; });
+  v.appendChild(el("p", { class: "snapinfo", text: "Comparing " + fmtDate(S.snaps[0].at) + " with " + fmtDate(S.snaps[1].at) + ". Navigation-only links are left out." }));
+  var grid = el("div", { class: "diffgrid" });
+  function box(title, items, fmt) { var p = el("div", { class: "panel" }, [el("h3", { text: title + " · " + items.length })]); var ul = el("ul"); items.slice(0, 200).forEach(function (x) { ul.appendChild(el("li", null, [fmt(x)])); }); if (!items.length) ul.appendChild(el("li", { style: "list-style:none;color:var(--muted)", text: "None" })); p.appendChild(ul); return p; }
+  function fr(m) { return function (id) { var f = m.frames[id]; return el("span", null, [el("a", { href: figmaUrl(id), target: "_blank", rel: "noopener", text: id }), document.createTextNode(" " + (f ? code(f) + " · " + f.title : ""))]); }; }
+  function ed(map, m) { return function (k) { var e = map[k], fa = m.frames[e.from], fb = m.frames[e.to]; return el("span", { text: (fa ? code(fa) + " " + fa.w : e.from) + " → " + (fb ? code(fb) + " " + fb.w : e.to) + " · " + e.label }); }; }
+  grid.appendChild(box("New screens", added, fr(b))); grid.appendChild(box("Removed screens", removed, fr(a)));
+  grid.appendChild(box("Renamed or retitled", renamed, function (id) { return el("span", null, [el("code", { text: id }), document.createTextNode(" " + a.frames[id].title + " → " + b.frames[id].title)]); }));
+  grid.appendChild(box("Screens that gained a way in", fixedOrphans, fr(b)));
+  grid.appendChild(box("New action links", eAdd, ed(bk, b))); grid.appendChild(box("Removed action links", eRem, ed(ak, a)));
+  v.appendChild(grid);
+}
+
+/* ---------- tabs ---------- */
+function setTab(t) {
+  S.tab = t;
+  ["overview", "journeys", "screens", "changes"].forEach(function (x) { document.getElementById("tab-" + x).setAttribute("aria-selected", x === t ? "true" : "false"); document.getElementById("view-" + x).hidden = x !== t; });
+  try { localStorage.setItem("cb-flow-tab", t); } catch (e) {}
+  renderAll();
+}
+function renderAll() {
+  if (S.tab === "overview") renderOverview(); else if (S.tab === "journeys") renderJourneys(); else if (S.tab === "screens") renderScreens(); else renderChanges();
+  var info = document.getElementById("snapinfo");
+  if (S.snaps[0]) info.textContent = "Extracted from Figma " + fmtDate(S.snaps[0].at) + " · " + Object.keys(S.data.frames).length + " screens · " + S.data.edges.length + " links" + (S.snaps[0].source === "seed" ? " · first extraction made by Claude" : "") + (S.snaps[0].lastModified ? " · Figma file last edited " + fmtDate(S.snaps[0].lastModified) : "");
+}
+document.querySelectorAll("nav.tabs button").forEach(function (b) { b.addEventListener("click", function () { setTab(b.getAttribute("data-tab")); }); });
+
+/* ---------- data ---------- */
+function showStatus(kind, text) {
+  var box = document.getElementById("refreshStatus"); box.hidden = false; box.innerHTML = "";
+  box.appendChild(el("div", { class: "notice " + (kind || ""), role: "status", text: text }));
+}
+function getJson(name) {
+  return fetch("data/" + name + "?t=" + Date.now(), { cache: "no-store" }).then(function (r) { if (r.status === 404) return null; if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+}
+function loadLatest() {
+  return getJson("latest.json").then(function (latest) {
+    return latest && latest.hasPrevious ? getJson("previous.json").catch(function () { return null; }).then(function (prev) { return [latest, prev]; }) : [latest, null];
+  }).then(function (r) {
+    var latest = r[0], prev = r[1];
+    if (!latest || !latest.pages) { S.snaps = []; S.data = null; document.getElementById("snapinfo").textContent = "No extraction published yet. Run the refresh workflow once."; renderAll(); return; }
+    S.snaps = [latest].concat(prev && prev.pages ? [prev] : []);
+    S.data = buildModel(latest.pages); S.prev = prev && prev.pages ? buildModel(prev.pages) : null;
+    if (latest.missingPages && latest.missingPages.length) showStatus("bad", "These Figma pages were not found in the last refresh: " + latest.missingPages.join(", ") + ".");
+    renderAll();
+  }).catch(function (e) { showStatus("bad", "Could not load data/latest.json (" + (e && e.message || e) + ")."); });
+}
+/* ---------- boot ---------- */
+try { var saved = localStorage.getItem("cb-flow-tab"); if (saved) S.tab = saved; } catch (e) {}
+setTab(S.tab);
+(function linkRefresh() {
+  // On <owner>.github.io/<repo>/ the button opens the workflow page, where "Run workflow" starts a refresh.
+  var m = /^([a-z0-9-]+)\.github\.io$/i.exec(location.hostname);
+  var repo = location.pathname.split("/").filter(Boolean)[0];
+  if (m && repo) { var b = document.getElementById("refreshBtn"); b.href = "https://github.com/" + m[1] + "/" + repo + "/actions/workflows/refresh.yml"; b.hidden = false; b.title = "Opens GitHub. Press 'Run workflow'; the page updates about two minutes later."; }
+})();
+loadLatest();
+})();
+</script>
+
+</body>
+</html>
